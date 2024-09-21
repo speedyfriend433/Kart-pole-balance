@@ -1,0 +1,25 @@
+body {
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    background-color: #f0f0f0;
+    font-family: Arial, sans-serif;
+}
+
+h1 {
+    margin: 20px 0;
+}
+
+#world {
+    border: 1px solid #ccc;
+    background-color: #ffffff;
+}
+
+#info {
+    margin-top: 10px;
+    font-size: 1.2em;
+}
+
+#info p {
+    margin: 5px 0;
+}
