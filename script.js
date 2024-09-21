@@ -57,19 +57,7 @@ World.add(world, constraint);
 // Keep the kart within the canvas
 Events.on(engine, 'beforeUpdate', () => {
     if (kart.position.x < 50 || kart.position.x > render.options.width - 50) {
-        // Reset position
-        Body.setPosition(kart, { x: 400, y: 500 });
-        Body.setVelocity(kart, { x: 0, y: 0 });
-        Body.setAngularVelocity(kart, 0);
-        
-        // Reset pole
-        Body.setPosition(pole, { x: 400, y: 500 - poleLength / 2 });
-        Body.setVelocity(pole, { x: 0, y: 0 });
-        Body.setAngularVelocity(pole, 0);
-        
-        // Increment episode
-        episode++;
-        updateInfo();
+        resetSimulation();
     }
 });
 
@@ -146,35 +134,32 @@ const stateSize = 4; // [kart_velocity, kart_position, pole_angle, pole_angular_
 const actionSize = 2; // [accelerate, steer]
 const agent = new Agent(stateSize, actionSize);
 
-// Experience Replay (Optional for better training)
-// For simplicity, we'll skip experience replay in this basic implementation
-
 // Hyperparameters
-const episodes = 1000;
-const maxSteps = 200;
-const epsilon = 1.0; // Exploration rate
+let epsilon = 1.0; // Exploration rate
 const epsilonDecay = 0.995;
 const epsilonMin = 0.01;
 
+// Training Flag
+let isTraining = false;
+
 // Main Training Loop
 async function train() {
+    isTraining = true;
+    document.getElementById('trainButton').disabled = true;
+    document.getElementById('trainButton').innerText = 'Training...';
+
+    const episodes = 1000;
+    const maxSteps = 200;
+
     for (let e = 0; e < episodes; e++) {
-        // Reset simulation
-        Body.setPosition(kart, { x: 400, y: 500 });
-        Body.setVelocity(kart, { x: 0, y: 0 });
-        Body.setAngularVelocity(kart, 0);
-        
-        Body.setPosition(pole, { x: 400, y: 500 - poleLength / 2 });
-        Body.setVelocity(pole, { x: 0, y: 0 });
-        Body.setAngularVelocity(pole, 0);
-        
+        resetSimulation();
         steps = 0;
         cumulativeReward = 0;
         updateInfo();
-        
+
         for (let s = 0; s < maxSteps; s++) {
             steps++;
-            
+
             // Get current state
             const state = [
                 kart.velocity.x, 
@@ -182,7 +167,7 @@ async function train() {
                 pole.angle, 
                 pole.angularVelocity
             ];
-            
+
             // Choose action
             let action;
             if (Math.random() < epsilon) {
@@ -192,35 +177,18 @@ async function train() {
                 // Exploit: choose the best action
                 action = await agent.act(state);
             }
-            
+
             // Apply action
-            // Action 0: Accelerate forward
-            // Action 1: Accelerate backward
-            // Action 2: Steer left
-            // Action 3: Steer right
-            // For simplicity, actionSize is 2: [accelerate, steer]
-            // We map actions as follows:
-            // 0: Accelerate forward
-            // 1: Accelerate backward
-            // 2: Steer left
-            // 3: Steer right
-            // However, since actionSize=2, we simplify:
-            // 0: Accelerate forward
-            // 1: Accelerate backward
-            // Steering is kept constant or can be integrated as separate action
-            // For this example, we'll focus on acceleration only
-            
-            // Map action to force
             const forceMagnitude = 0.002;
             if (action === 0) {
                 Body.applyForce(kart, kart.position, { x: forceMagnitude, y: 0 });
             } else if (action === 1) {
                 Body.applyForce(kart, kart.position, { x: -forceMagnitude, y: 0 });
             }
-            
+
             // Step simulation
             Engine.update(engine, render.options.timeStep);
-            
+
             // Get next state
             const nextState = [
                 kart.velocity.x, 
@@ -228,39 +196,66 @@ async function train() {
                 pole.angle, 
                 pole.angularVelocity
             ];
-            
+
             // Calculate reward
             let reward = 1.0;
             // Penalize large angles
             reward -= Math.abs(pole.angle) * 10;
-            
+
             // Check if pole has fallen
             let done = false;
             if (Math.abs(pole.angle) > Math.PI / 6) { // 30 degrees
                 reward = -100;
                 done = true;
             }
-            
+
             cumulativeReward += reward;
             updateInfo();
-            
+
             // Train the agent
             await agent.train(state, action, reward, nextState, done);
-            
+
             if (done) {
                 console.log(`Episode ${e+1} ended after ${s+1} steps with reward ${cumulativeReward}`);
                 break;
             }
         }
-        
+
         // Decay epsilon
         if (epsilon > epsilonMin) {
             epsilon *= epsilonDecay;
         }
+
+        // Optional: Update UI or provide feedback per episode
+        // e.g., display episode number, rewards, etc.
     }
-    
+
+    isTraining = false;
+    document.getElementById('trainButton').disabled = false;
+    document.getElementById('trainButton').innerText = 'Train AI';
+
     console.log('Training completed');
 }
 
-// Start training
-train();
+// Function to Reset Simulation
+function resetSimulation() {
+    // Reset kart position and velocity
+    Body.setPosition(kart, { x: 400, y: 500 });
+    Body.setVelocity(kart, { x: 0, y: 0 });
+    Body.setAngularVelocity(kart, 0);
+    
+    // Reset pole position and velocity
+    Body.setPosition(pole, { x: 400, y: 500 - poleLength / 2 });
+    Body.setVelocity(pole, { x: 0, y: 0 });
+    Body.setAngularVelocity(pole, 0);
+    
+    // Reset constraint
+    Body.setAngle(pole, 0);
+}
+
+// Add Event Listener to Train Button
+document.getElementById('trainButton').addEventListener('click', () => {
+    if (!isTraining) {
+        train();
+    }
+});
