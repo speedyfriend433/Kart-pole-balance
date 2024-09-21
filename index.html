@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Kart Pole Balancer AI</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Link to CSS -->
+    <link rel="stylesheet" href="style.css">
+    <!-- Matter.js CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js" integrity="sha512-NMvbeG3cJoGvfsNwOXwD/IimDgqP+xLhSTrCiXknXsc4l1sCeU+mbl+Qbjp3LxAB6ddOX68E7S+Pab6V43e1Mg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- TensorFlow.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.21.0/dist/tf.min.js"></script>
+</head>
+<body>
+    <h1>Kart Pole Balancer AI</h1>
+    <canvas id="world"></canvas>
+    <div id="info">
+        <p>Episode: <span id="episode">0</span></p>
+        <p>Steps: <span id="steps">0</span></p>
+        <p>Reward: <span id="reward">0</span></p>
+    </div>
+    <!-- Link to JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
