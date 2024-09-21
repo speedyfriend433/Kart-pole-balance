@@ -23,3 +23,27 @@ h1 {
 #info p {
     margin: 5px 0;
 }
+
+/* Train Button Styles */
+#trainButton {
+    margin-top: 20px;
+    padding: 10px 20px;
+    font-size: 1em;
+    background-color: #3498db;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.3s;
+}
+
+#trainButton:hover {
+    background-color: #2980b9;
+    transform: scale(1.05);
+}
+
+#trainButton:disabled {
+    background-color: #95a5a6;
+    cursor: not-allowed;
+    transform: scale(1);
+}
