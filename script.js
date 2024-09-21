@@ -131,7 +131,7 @@ class Agent {
 
 // Initialize Agent
 const stateSize = 4; // [kart_velocity, kart_position, pole_angle, pole_angular_velocity]
-const actionSize = 2; // [accelerate, steer]
+const actionSize = 2; // [accelerate forward, accelerate backward]
 const agent = new Agent(stateSize, actionSize);
 
 // Hyperparameters
@@ -143,21 +143,16 @@ const epsilonMin = 0.01;
 let isTraining = false;
 
 // Main Training Loop
-async function train() {
-    isTraining = true;
-    document.getElementById('trainButton').disabled = true;
-    document.getElementById('trainButton').innerText = 'Training...';
-
-    const episodes = 1000;
-    const maxSteps = 200;
-
-    for (let e = 0; e < episodes; e++) {
+async function trainLoop(totalEpisodes = 1000, maxSteps = 200) {
+    for (let e = 0; e < totalEpisodes; e++) {
+        if (!isTraining) break; // Stop training if flag is unset
         resetSimulation();
         steps = 0;
         cumulativeReward = 0;
         updateInfo();
 
         for (let s = 0; s < maxSteps; s++) {
+            if (!isTraining) break; // Stop training if flag is unset
             steps++;
 
             // Get current state
@@ -226,15 +221,13 @@ async function train() {
             epsilon *= epsilonDecay;
         }
 
-        // Optional: Update UI or provide feedback per episode
-        // e.g., display episode number, rewards, etc.
+        // Update UI or provide feedback per episode (optional)
     }
 
+    console.log('Training completed');
     isTraining = false;
     document.getElementById('trainButton').disabled = false;
     document.getElementById('trainButton').innerText = 'Train AI';
-
-    console.log('Training completed');
 }
 
 // Function to Reset Simulation
@@ -243,19 +236,28 @@ function resetSimulation() {
     Body.setPosition(kart, { x: 400, y: 500 });
     Body.setVelocity(kart, { x: 0, y: 0 });
     Body.setAngularVelocity(kart, 0);
-    
+
     // Reset pole position and velocity
     Body.setPosition(pole, { x: 400, y: 500 - poleLength / 2 });
     Body.setVelocity(pole, { x: 0, y: 0 });
     Body.setAngularVelocity(pole, 0);
-    
-    // Reset constraint
+
+    // Reset constraint angle
     Body.setAngle(pole, 0);
 }
 
 // Add Event Listener to Train Button
 document.getElementById('trainButton').addEventListener('click', () => {
     if (!isTraining) {
-        train();
+        isTraining = true;
+        document.getElementById('trainButton').disabled = true;
+        document.getElementById('trainButton').innerText = 'Training...';
+        trainLoop(1000, 200).catch(error => {
+            console.error('Training Error:', error);
+            alert('An error occurred during training. Check the console for details.');
+            isTraining = false;
+            document.getElementById('trainButton').disabled = false;
+            document.getElementById('trainButton').innerText = 'Train AI';
+        });
     }
 });
